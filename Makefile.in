@@ -1,0 +1,109 @@
+###############################################################################
+# @configure_input@
+# Makefile for the DMalloc library.
+# $Id: Makefile.in,v 1.3 2010-05-07 15:12:37 gray Exp $
+###############################################################################
+
+# default root installation directory
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+libdir = @libdir@
+includedir = @includedir@
+
+# default c++-compiler
+CXX = @CXX@
+
+DEFS = $(DEFINES)
+INCS = -I. -I$(srcdir) $(INCLUDES)
+LIBS = -L. @LIBS@
+A_OUT = aout@EXEEXT@
+
+MODULE	= sha1
+LIBRARY	= lib$(MODULE).a
+
+# now construct our build and install targets
+BUILD_ALL = $(LIBRARY)
+INSTALL_LIB = $(LIBRARY)
+
+CXFLAGS = @CXXFLAGS@
+LDFLAGS = @LDFLAGS@
+
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+
+PORTFLS	= Makefile.in configure.ac configure README.txt rfc1321.txt sha1.[hcpp] \
+	install-sh mkinstalldirs
+
+###############################################################################
+# End of system configuration section.
+###############################################################################
+
+SHELL = /bin/sh
+
+HFLS = src/sha1.h
+OBJS = src/sha1.o
+
+CXFLAGS = $(CXXFLAGS)
+TEST = $(MODULE)_t
+
+all : $(BUILD_ALL)
+
+clean :
+	rm -f $(A_OUT) core *.o *.t
+	rm -f $(LIBRARY) $(TEST)
+
+realclean : clean
+
+distclean : clean
+	rm -f confdefs.h config.status config.log config.cache conf.h
+	rm -f configure.lineno
+	rm -rf autom4te.cache
+	rm -f Makefile
+
+installdirs :
+	$(srcdir)/mkinstalldirs $(includedir) $(libdir) $(bindir)
+
+installincs : $(HFLS)
+	$(srcdir)/mkinstalldirs $(includedir)
+	$(INSTALL_DATA) $(HFLS) $(includedir)
+
+installlib : $(INSTALL_LIB)
+	$(srcdir)/mkinstalldirs $(libdir)
+	$(INSTALL_DATA) $(LIBRARY) $(libdir)
+	@RANLIB@ $(libdir)/$(LIBRARY)
+
+install : installincs installlib
+
+$(LIBRARY) : $(OBJS) $(NORMAL_OBJS)
+	ar cr $@ $?
+	@RANLIB@ $@
+
+tests : $(TEST)
+	./$(TEST)
+
+$(TEST) : $(TEST).o $(LIBRARY)
+	rm -f $@
+	$(CXX) $(LDFLAGS) -o $(A_OUT) $(TEST).o $(LIBRARY)
+	mv $(A_OUT) $@
+
+.c.o :
+	rm -f $@
+	$(CXX) $(CXFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $< -o ./$@
+
+port :: $(PORTFLS)
+	rm -rf $@
+	mkdir $@
+	cp $(PORTFLS) $@
+	@ echo ''
+	@ echo 'Please rename $@ to sha1-version and tar up file'
+
+###############################################################################
+#
+# These dependencies are automatically generated.  Do not edit by hand.
+#
+
+sha1.o: sha1.cpp sha1.h
