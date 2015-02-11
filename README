@@ -1,5 +1,3 @@
-TO BE UPDATED
-
 This library is a slightly modified version of the one found at http://tamalenet/sha1 by Michael D. Leonhard.
 
 The modifications are mostly the inclusion of a makefile for building a static library
