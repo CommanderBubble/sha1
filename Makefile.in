@@ -55,7 +55,7 @@ all : $(BUILD_ALL)
 clean :
 	rm -f $(A_OUT) core *.o *.t
 	rm -f $(LIBRARY) $(TEST)
-	rm -f src/*.o
+	
 
 realclean : clean
 

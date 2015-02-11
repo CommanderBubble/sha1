@@ -18,14 +18,14 @@
 #
 AC_REVISION($Revision: 0.2 $)
 AC_INIT(sha1, 0.2, [http://256.com/sources/md5/])
-AC_CONFIG_SRCDIR(sha1.cpp)
+-AC_CONFIG_SRCDIR(./src)
 
 AC_MSG_NOTICE([configurations for the sha1 library])
 
 ##############################################################################
 # arguments
 
-AC_PROG_CC
+AC_PROG_CXX
 
 AC_PROG_INSTALL
 AC_PROG_RANLIB
