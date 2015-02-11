@@ -18,12 +18,11 @@ class SHA1 {
 
 		void addBytes(const char*, int);
 		unsigned char* getDigest();
-
-		// utility methods
+	private:
+	    // utility methods
 		Uint32 lrot(Uint32, int);
 		void storeBigEndianUint32(unsigned char*, Uint32);
 
-	private:
 		// fields
 		Uint32 H0, H1, H2, H3, H4;
 		unsigned char bytes[64];
