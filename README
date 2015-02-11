@@ -48,10 +48,9 @@ The following program will print one line to stdout:
 int main(int argc, char *argv[])
 {
 	#define BYTES "abc"
-	SHA1* sha1 = new SHA1();
-	sha1->addBytes( BYTES, strlen( BYTES ) );
-	unsigned char* digest = sha1->getDigest();
+	SHA1 sha1_hash;
+	sha1_hash.addBytes( BYTES, strlen( BYTES ) );
+	unsigned char* digest = sha1_hash.getDigest();
 	SHA1_hexPrinter( digest, 20 );
-	delete sha1;
 	free( digest );
 }
