@@ -31,8 +31,8 @@ class SHA1 {
 		void process();
 };
 
-extern void SHA1_hexPrinter(unsigned char*, int);
-extern void SHA1_hexToString(unsigned char*, char*, int);
+void SHA1_hexPrinter(unsigned char*, int);
+void SHA1_hexToString(unsigned char*, char*, int);
 
 #define SHA1_HEADER
 #endif
