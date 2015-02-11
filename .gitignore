@@ -30,5 +30,5 @@
 # autotools output
 configure
 makefile
-config
+config.*
 autom4te.cache
