@@ -29,14 +29,16 @@ LIBRARY	= lib$(MODULE).a
 BUILD_ALL = $(LIBRARY)
 INSTALL_LIB = $(LIBRARY)
 
-CXFLAGS = @CXXFLAGS@
+ifneq ($(CXXFLAGS), )
+$(info Using custom $(CXX) flags)
+else
+CXXFLAGS = @CXXFLAGS@
+endif
+
 LDFLAGS = @LDFLAGS@
 
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
-
-PORTFLS	= Makefile.in configure.ac configure README.txt rfc1321.txt sha1.[hcpp] \
-	install-sh mkinstalldirs
 
 ###############################################################################
 # End of system configuration section.
@@ -47,8 +49,7 @@ SHELL = /bin/sh
 HFLS = src/sha1.h
 OBJS = src/sha1.o
 
-CXFLAGS = $(CXXFLAGS)
-TEST = $(MODULE)_t
+TEST = tests/$(MODULE)_t
 
 all : $(BUILD_ALL)
 
@@ -56,6 +57,7 @@ clean :
 	rm -f $(A_OUT) core *.o *.t
 	rm -f $(LIBRARY) $(TEST)
 	rm -f src/*.o
+	rm -f tests/*.o tests/*.t
 
 realclean : clean
 
@@ -90,21 +92,3 @@ $(TEST) : $(TEST).o $(LIBRARY)
 	rm -f $@
 	$(CXX) $(LDFLAGS) -o $(A_OUT) $(TEST).o $(LIBRARY)
 	mv $(A_OUT) $@
-
-.c.o :
-	rm -f $@
-	$(CXX) $(CXFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $< -o ./$@
-
-port :: $(PORTFLS)
-	rm -rf $@
-	mkdir $@
-	cp $(PORTFLS) $@
-	@ echo ''
-	@ echo 'Please rename $@ to sha1-version and tar up file'
-
-###############################################################################
-#
-# These dependencies are automatically generated.  Do not edit by hand.
-#
-
-sha1.o: sha1.cpp sha1.h
