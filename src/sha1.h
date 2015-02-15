@@ -9,30 +9,31 @@ accompanying LICENSE file.
 */
 
 #ifndef SHA1_HEADER
-typedef unsigned int Uint32;
 
-class SHA1 {
-	public:
-	    SHA1();
-	    ~SHA1();
+namespace SHA1 {
+    class SHA1_t {
+        public:
+            SHA1_t();
+            ~SHA1_t();
 
-		void addBytes(const char*, int);
-		unsigned char* getDigest();
-	private:
-	    // utility methods
-		Uint32 lrot(Uint32, int);
-		void storeBigEndianUint32(unsigned char*, Uint32);
+            void addBytes(const char*, int);
+            unsigned char* getDigest();
+        private:
+            // utility methods
+            unsigned int lrot(unsigned int, int);
+            void storeBigEndianUint32(unsigned char*, unsigned int);
 
-		// fields
-		Uint32 H0, H1, H2, H3, H4;
-		unsigned char bytes[64];
-		int unprocessedBytes;
-		Uint32 size;
-		void process();
-};
+            // fields
+            unsigned int H0, H1, H2, H3, H4;
+            unsigned char bytes[64];
+            int unprocessedBytes;
+            size_t size;
+            void process();
+    };
 
-void SHA1_hexPrinter(unsigned char*, int);
-void SHA1_hexToString(unsigned char*, char*, int);
+    void hex_printer(unsigned char*, int);
+    void hex_to_string(unsigned char*, char*, int);
+} // namescpace SHA1
 
 #define SHA1_HEADER
 #endif
