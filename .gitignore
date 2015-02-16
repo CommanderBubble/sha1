@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+sha1_t
 
 # Precompiled Headers
 *.gch
@@ -32,3 +33,4 @@ configure
 makefile
 config.*
 autom4te.cache
+conf.*
