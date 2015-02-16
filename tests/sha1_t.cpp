@@ -16,7 +16,7 @@ accompanying LICENSE file.
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "sha1.h"
+#include "../src/sha1.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 	unsigned char* digest;
 	int i;
 	#define BUFFERSIZE 8192
-	
+
 	if( argc == 2 )
 	{
 		assert( argv[1] );
@@ -35,12 +35,12 @@ int main(int argc, char *argv[])
 			fprintf( stderr, "cannot open file %s\n", argv[1] );
 			return 1;
 			}
-		
+
 		/* prepare to calculate the SHA-1 hash */
 		sha1 = new SHA1();
 		char* buffer = (char*)malloc( BUFFERSIZE );
 		assert( buffer );
-		
+
 		/* loop through the file */
 		int ret;
 		while( true ) {
@@ -51,16 +51,16 @@ int main(int argc, char *argv[])
 			/* run this data through the hash function */
 			sha1->addBytes( buffer, ret );
 			}
-		
+
 		/* close the file */
 		close( fd );
-		
+
 		/* there was an error reading the file */
 		if( ret == -1 ) {
 			fprintf( stderr, "error reading %s.\n", argv[1] );
 			return 1;
 			}
-		
+
 		/* get the digest */
 		digest = sha1->getDigest();
 		assert( digest );
@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
 		free( digest );
 		return 0;
 	}
-	
+
 	// these example text blocks are taken from RFC3174
-				
+
 	#define TEXT1 "abc"
 	#define DIGEST1 " a9 99 3e 36 47 06 81 6a ba 3e 25 71 78 50 c2 6c 9c d0 d8 9d"
 	printf( "%s:\n%s\n", TEXT1, DIGEST1 );
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	sha1->hexPrinter( digest, 20 );
 	delete sha1;
 	free( digest );
-	
+
 	#define TEXT3 "a"
 	#define INFO3 "a X 1000000"
 	#define DIGEST3 " 34 aa 97 3c d4 c4 da a4 f6 1e eb 2b db ad 27 31 65 34 01 6f"
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 	sha1->hexPrinter( digest, 20 );
 	delete sha1;
 	free( digest );
-	
+
 	#define TEXT4 "0123456701234567012345670123456701234567012345670123456701234567"
 	#define INFO4 "0123456701234567012345670123456701234567012345670123456701234567 X 10"
 	#define DIGEST4 " de a3 56 a2 cd dd 90 c7 a7 ec ed c5 eb b5 63 93 4f 46 04 52"
@@ -117,6 +117,6 @@ int main(int argc, char *argv[])
 	sha1->hexPrinter( digest, 20 );
 	delete sha1;
 	free( digest );
-	
+
 	return 0;
 }
