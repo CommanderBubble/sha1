@@ -11,6 +11,7 @@ accompanying LICENSE file.
 #ifndef SHA1_HEADER
 
 namespace SHA1 {
+
     class SHA1_t {
         public:
             SHA1_t();
@@ -33,6 +34,7 @@ namespace SHA1 {
 
     void hex_printer(unsigned char*, int);
     void hex_to_string(unsigned char*, char*, int);
+
 } // namescpace SHA1
 
 #define SHA1_HEADER
