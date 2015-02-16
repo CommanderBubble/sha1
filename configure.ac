@@ -44,9 +44,9 @@ AC_RUN_IFELSE(
 	[AC_LANG_SOURCE([
 		int main() { int x = 1; char *s = (char *)&x; if (*s == '\001') return 0; else return 1; }
 	])],
-	[AC_DEFINE(MD5_BIG_ENDIAN, 0, [Little-endian machine])],
-	[AC_DEFINE(MD5_BIG_ENDIAN, 1, [Big-endian machine])],
-	[AC_DEFINE(MD5_BIG_ENDIAN, 0, [Cross-compiling; assumed little-endian])]
+	[AC_DEFINE(SHA1_BIG_ENDIAN, 0, [Little-endian machine])],
+	[AC_DEFINE(SHA1_BIG_ENDIAN, 1, [Big-endian machine])],
+	[AC_DEFINE(SHA1_BIG_ENDIAN, 0, [Cross-compiling; assumed little-endian])]
 )
 
 # HACK: we run the test because AC_RUN_IFELSE wont take multiple actions that i can figure out...
