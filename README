@@ -9,6 +9,20 @@ Documentation is the same as is provided in the unmodified library; changed only
 
 This is a C++ class that implements the Secure Hash Algorithm SHA-1.  The purpose of the algorithm is to calculate a strong hash of given bit string. By "strong", we mean that it is very difficult to find a different bit string that results in the same hash.  It is similarly difficult, using only the hash, to determine the original bit string.  SHA-1 produces a 20 byte (160 bit) hash.
 
+* Building The Library
+
+The provided makefile will produce a static lib to link against.
+To build it follow these steps:
+	1) autoreconf
+	2) configure
+	3) make
+	4) make install
+	
+you can then make check to run the library's self checks
+
+by default the library will compile with the CXXFLAGS '-g -O2'. For a production library without the debugging symbols, call
+make CXXFLAGS=*your flags here*
+
 * Class Usage
 
 The class is called SHA1.  The API consists of three methods:
