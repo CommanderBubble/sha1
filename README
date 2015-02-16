@@ -18,10 +18,10 @@ To build it follow these steps:
 	3) make
 	4) make install
 	
-you can then make check to run the library's self checks
+you can then 'make check' to run the library's self checks
 
 by default the library will compile with the CXXFLAGS '-g -O2'. For a production library without the debugging symbols, call
-make CXXFLAGS=*your flags here*
+make CXXFLAGS=<your_flags_here>
 
 * Class Usage
 
