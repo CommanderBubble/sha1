@@ -3,7 +3,6 @@
 *.lo
 *.o
 *.obj
-sha1_t
 
 # Precompiled Headers
 *.gch
@@ -27,6 +26,7 @@ sha1_t
 *.exe
 *.out
 *.app
+sha1_t
 
 # autotools output
 configure
