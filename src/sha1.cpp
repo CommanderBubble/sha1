@@ -15,10 +15,7 @@ accompanying LICENSE file.
 
 #include "sha1.h"
 
-namespace SHA1 {
-    const char* HEX_STRING = "0123456789abcdef"; // to convert to hex
-    #define SHA1_SIZE 20
-
+namespace sha1 {
     // print out memory in hexadecimal
     void hex_printer( unsigned char* c, int l )
     {
@@ -57,12 +54,12 @@ namespace SHA1 {
     }
 
     // circular left bit rotation.  MSB wraps around to LSB
-    unsigned int SHA1_t::lrot( unsigned int x, int bits ) {
+    unsigned int sha1_t::lrot( unsigned int x, int bits ) {
         return (x<<bits) | (x>>(32 - bits));
     };
 
     // Save a 32-bit unsigned integer to memory, in big-endian order
-    void SHA1_t::storeBigEndianUint32( unsigned char* byte, unsigned int num ) {
+    void sha1_t::storeBigEndianUint32( unsigned char* byte, unsigned int num ) {
         byte[0] = (unsigned char)(num>>24);
         byte[1] = (unsigned char)(num>>16);
         byte[2] = (unsigned char)(num>>8);
@@ -70,9 +67,9 @@ namespace SHA1 {
     }
 
     // Constructor *******************************************************
-    SHA1_t::SHA1_t() {
+    sha1_t::sha1_t() {
         // make sure that the data type is the right size
-        assert( sizeof( unsigned int ) * 5 == 20 );
+        assert(SHA1_SIZE == 20);
 
         // initialize
         H0 = 0x67452301;
@@ -84,8 +81,9 @@ namespace SHA1 {
         size = 0;
     }
 
+    /** is this actually needed? */
     // Destructor ********************************************************
-    SHA1_t::~SHA1_t() {
+    sha1_t::~sha1_t() {
         // erase data
         H0 = H1 = H2 = H3 = H4 = 0;
         for( int c = 0; c < 64; c++ ) bytes[c] = 0;
@@ -93,7 +91,7 @@ namespace SHA1 {
     }
 
     // process ***********************************************************
-    void SHA1_t::process() {
+    void sha1_t::process() {
         assert( unprocessedBytes == 64 );
         //printf( "process: " ); hexPrinter( bytes, 64 ); printf( "\n" );
         int t;
@@ -148,7 +146,7 @@ namespace SHA1 {
     }
 
     // addBytes **********************************************************
-    void SHA1_t::addBytes( const char* data, int num ) {
+    void sha1_t::addBytes( const char* data, int num ) {
         assert( data );
 
         if (num <= 0)
@@ -177,7 +175,7 @@ namespace SHA1 {
     }
 
     // digest ************************************************************
-    unsigned char* SHA1_t::getDigest() {
+    unsigned char* sha1_t::getDigest() {
         // save the message size
         unsigned int totalBitsL = size << 3;
         unsigned int totalBitsH = size >> 29;
@@ -212,5 +210,5 @@ namespace SHA1 {
         return digest;
     }
 
-} // namespace SHA1
+} // namespace sha1
 
