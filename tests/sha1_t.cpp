@@ -8,25 +8,23 @@ This file is licensed under the terms described in the
 accompanying LICENSE file.
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
 #include <fcntl.h>
+#include <vector>
+#include <iostream>
 
 #include "../src/sha1.h"
 
 int main(int argc, char *argv[])
 {
-	SHA1* sha1;
-	unsigned char* digest;
-	int i;
-	#define BUFFERSIZE 8192
+	if( argc == 2 ) {
+        sha1::sha1_t sha1;
+        unsigned char* digest;
+        int i;
+        #define BUFFERSIZE 8192
 
-	if( argc == 2 )
-	{
 		assert( argv[1] );
 		/* open the file */
 		int fd = open( argv[1], O_RDONLY | O_BINARY, 0 );
@@ -37,7 +35,6 @@ int main(int argc, char *argv[])
 			}
 
 		/* prepare to calculate the SHA-1 hash */
-		sha1 = new SHA1();
 		char* buffer = (char*)malloc( BUFFERSIZE );
 		assert( buffer );
 
@@ -49,7 +46,7 @@ int main(int argc, char *argv[])
 			/* check for error and end of file */
 			if( ret < 1 ) break;
 			/* run this data through the hash function */
-			sha1->addBytes( buffer, ret );
+			sha1.process(buffer, ret);
 			}
 
 		/* close the file */
@@ -62,61 +59,83 @@ int main(int argc, char *argv[])
 			}
 
 		/* get the digest */
-		digest = sha1->getDigest();
+		sha1.finish(digest);
 		assert( digest );
 		/* print it out */
 		printf( "%s:", argv[1] );
-		sha1->hexPrinter( digest, 20 );
+		sha1::hex_printer( digest, 20 );
 		printf( "\n" );
 		fflush( stdout );
-		delete sha1;
 		free( digest );
 		return 0;
 	}
 
 	// these example text blocks are taken from RFC3174
 
-	#define TEXT1 "abc"
-	#define DIGEST1 " a9 99 3e 36 47 06 81 6a ba 3e 25 71 78 50 c2 6c 9c d0 d8 9d"
-	printf( "%s:\n%s\n", TEXT1, DIGEST1 );
-	sha1 = new SHA1();
-	sha1->addBytes( TEXT1, strlen( TEXT1 ) );
-	digest = sha1->getDigest();
-	sha1->hexPrinter( digest, 20 );
-	delete sha1;
-	free( digest );
+    std::vector<std::pair<const char*, const char*> > tests;
+    tests.push_back(std::pair<const char*, const char*>("abc","a9993e364706816aba3e25717850c26c9cd0d89d"));
+    tests.push_back(std::pair<const char*, const char*>("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq","84983e441c3bd26ebaae4aa1f95129e5e54670f1"));
+    tests.push_back(std::pair<const char*, const char*>("a","34aa973cd4c4daa4f61eeb2bdbad27316534016f"));
+    tests.push_back(std::pair<const char*, const char*>("0123456701234567012345670123456701234567012345670123456701234567","dea356a2cddd90c7a7ecedc5ebb563934f460452"));
 
-	#define TEXT2 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
-	#define DIGEST2 " 84 98 3e 44 1c 3b d2 6e ba ae 4a a1 f9 51 29 e5 e5 46 70 f1"
-	printf( "\n%s:\n%s\n", TEXT2, DIGEST2 );
-	sha1 = new SHA1();
-	sha1->addBytes( TEXT2, strlen( TEXT2 ) );
-	digest = sha1->getDigest();
-	sha1->hexPrinter( digest, 20 );
-	delete sha1;
-	free( digest );
+    std::vector<unsigned int> multiplier;
+    multiplier.push_back(1);
+    multiplier.push_back(1);
+    multiplier.push_back(1000000);
+    multiplier.push_back(10);
 
-	#define TEXT3 "a"
-	#define INFO3 "a X 1000000"
-	#define DIGEST3 " 34 aa 97 3c d4 c4 da a4 f6 1e eb 2b db ad 27 31 65 34 01 6f"
-	printf( "\n%s:\n%s\n", INFO3, DIGEST3 );
-	sha1 = new SHA1();
-	for( i = 0; i < 1000000; i++ ) sha1->addBytes( TEXT3, 1 );
-	digest = sha1->getDigest();
-	sha1->hexPrinter( digest, 20 );
-	delete sha1;
-	free( digest );
+    int passed = 0;
+    int passed_h = 0;
+    int passed_c = 0;
 
-	#define TEXT4 "0123456701234567012345670123456701234567012345670123456701234567"
-	#define INFO4 "0123456701234567012345670123456701234567012345670123456701234567 X 10"
-	#define DIGEST4 " de a3 56 a2 cd dd 90 c7 a7 ec ed c5 eb b5 63 93 4f 46 04 52"
-	printf( "\n%s:\n%s\n", INFO4, DIGEST4 );
-	sha1 = new SHA1();
-	for( int i = 0; i < 10; i++ ) sha1->addBytes( TEXT4, strlen( TEXT4 ) );
-	digest = sha1->getDigest();
-	sha1->hexPrinter( digest, 20 );
-	delete sha1;
-	free( digest );
+    unsigned char sig[SHA1_SIZE], sig2[SHA1_SIZE];
+    char str[SHA1_STRING_SIZE];
+
+
+    /* run our tests */
+    for (unsigned int i = 0; i < tests.size(); i++) {
+        bool passed_hash = 0;
+        bool passed_convert = 0;
+
+        sha1::sha1_t sha1;
+
+        for (unsigned int j = 0; j < multiplier[i]; j++) {
+            sha1.process(tests[i].first, strlen(tests[i].first));
+        }
+
+        sha1.finish(sig);
+
+        /* convert from the sig to a string rep */
+        sha1::sig_to_string(sig, str, sizeof(str));
+        if (strcmp(str, tests[i].second) == 0) {
+            passed_hash = true;
+            passed_h++;
+        }
+
+        /* convert from the string back into a MD5 signature */
+        sha1::sig_from_string(sig2, str);
+        if (memcmp(sig, sig2, SHA1_SIZE) == 0) {
+            passed_convert = true;
+            passed_c++;
+        }
+
+        if (passed_hash and passed_convert) {
+            std::cout << "TEST " << i + 1 << " PASSED" << std::endl;
+            passed++;
+        } else {
+            std::cout << "TEST " << i + 1 << " FAILED" << std::endl;
+        }
+    }
+
+    std::cout << std::endl << "*******************************" << std::endl
+              << "    " << passed << " of " << tests.size() << " tests passed" << std::endl;
+    if (passed != tests.size()) {
+        std::cout << std::endl << "   Please notify developer" << std::endl;
+        std::cout << "  " << passed_h << " passed hashing check" << std::endl
+                  << "  " << passed_h << " passed comparison check" << std::endl;
+    }
+    std::cout << "*******************************" << std::endl;
 
 	return 0;
 }
+
