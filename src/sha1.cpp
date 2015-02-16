@@ -8,12 +8,12 @@ This file is licensed under the terms described in the
 accompanying LICENSE file.
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <cstring>
+#include <cassert>
 
+#include "../conf.h"
 #include "sha1.h"
+#include "sha1_loc.h"
 
 namespace sha1 {
     // print out memory in hexadecimal
@@ -23,33 +23,6 @@ namespace sha1 {
             printf( "%02x", *c );
             l--;
             c++;
-        }
-    }
-
-    void hex_to_string(unsigned char *signature, char *str, const int str_len) {
-        unsigned char *sig_p;
-        char *str_p, *max_p;
-        unsigned int high, low;
-
-        str_p = str;
-        max_p = str + str_len;
-
-        for (sig_p = signature; sig_p < signature + SHA1_SIZE; sig_p++) {
-            high = *sig_p / 16;
-            low = *sig_p % 16;
-
-            /* account for 2 chars */
-            if (str_p + 1 >= max_p) {
-                break;
-            }
-
-            *str_p++ = HEX_STRING[high];
-            *str_p++ = HEX_STRING[low];
-        }
-
-        /* account for 2 chars */
-        if (str_p < max_p) {
-            *str_p++ = '\0';
         }
     }
 
@@ -145,86 +118,142 @@ namespace sha1 {
 
     // addBytes **********************************************************
     void sha1_t::process(const char* buffer, int buf_len) {
-        assert( buffer );
+        if (!finished) {
+            assert( buffer );
 
-        if (buf_len <= 0)
-            return;
+            if (buf_len <= 0)
+                return;
 
-        // add these bytes to the running total
-        size += buf_len;
+            // add these bytes to the running total
+            size += buf_len;
 
-        // repeat until all data is processed
-        while (buf_len > 0) {
-            // number of bytes required to complete block
-            int needed = sha1::BLOCK_SIZE - unprocessedBytes;
-            assert(needed > 0);
+            // repeat until all data is processed
+            while (buf_len > 0) {
+                // number of bytes required to complete block
+                int needed = sha1::BLOCK_SIZE - unprocessedBytes;
+                assert(needed > 0);
 
-            // number of bytes to copy (use smaller of two)
-            int toCopy = (buf_len < needed) ? buf_len : needed;
+                // number of bytes to copy (use smaller of two)
+                int toCopy = (buf_len < needed) ? buf_len : needed;
 
-            // Copy the bytes
-            memcpy(bytes + unprocessedBytes, buffer, toCopy);
+                // Copy the bytes
+                memcpy(bytes + unprocessedBytes, buffer, toCopy);
 
-            // Bytes have been copied
-            buf_len -= toCopy;
-            buffer += toCopy;
-            unprocessedBytes += toCopy;
+                // Bytes have been copied
+                buf_len -= toCopy;
+                buffer += toCopy;
+                unprocessedBytes += toCopy;
 
-            // there is a full block
-            if (unprocessedBytes == sha1::BLOCK_SIZE)
-                process_block();
+                // there is a full block
+                if (unprocessedBytes == sha1::BLOCK_SIZE)
+                    process_block();
+            }
         }
     }
 
     // digest ************************************************************
     void sha1_t::finish(void* signature_) {
-        // save the message size
-        unsigned int totalBitsL = size << 3;
-        unsigned int totalBitsH = size >> 29;
+        if (!finished) {
+            // save the message size
+            unsigned int totalBitsL = size << 3;
+            unsigned int totalBitsH = size >> 29;
 
-        // add 0x80 to the message
-        process("\x80", 1);
+            // add 0x80 to the message
+            process("\x80", 1);
 
-        unsigned char footer[sha1::BLOCK_SIZE] = {
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            unsigned char footer[sha1::BLOCK_SIZE] = {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-        // block has no room for 8-byte filesize, so finish it
-        if( unprocessedBytes > 56 )
-            process((char*)footer, sha1::BLOCK_SIZE - unprocessedBytes);
+            // block has no room for 8-byte filesize, so finish it
+            if( unprocessedBytes > 56 )
+                process((char*)footer, sha1::BLOCK_SIZE - unprocessedBytes);
 
-        assert( unprocessedBytes <= 56 );
+            assert( unprocessedBytes <= 56 );
 
-        // how many zeros do we need
-        int neededZeros = 56 - unprocessedBytes;
+            // how many zeros do we need
+            int neededZeros = 56 - unprocessedBytes;
 
-        // store file size (in bits) in big-endian format
-        storeBigEndianUint32( footer + neededZeros    , totalBitsH );
-        storeBigEndianUint32( footer + neededZeros + 4, totalBitsL );
+            // store file size (in bits) in big-endian format
+            storeBigEndianUint32( footer + neededZeros    , totalBitsH );
+            storeBigEndianUint32( footer + neededZeros + 4, totalBitsL );
 
-        // finish the final block
-        process((char*)footer, neededZeros + 8);
+            // finish the final block
+            process((char*)footer, neededZeros + 8);
 
-        // allocate memory for the digest bytes
-//        unsigned char* digest = (unsigned char*)malloc( 20 );
+            // allocate memory for the digest bytes
+    //        unsigned char* digest = (unsigned char*)malloc( 20 );
 
-        // copy the digest bytes
-/*        storeBigEndianUint32( digest, H0 );
-        storeBigEndianUint32( digest + 4, H1 );
-        storeBigEndianUint32( digest + 8, H2 );
-        storeBigEndianUint32( digest + 12, H3 );
-        storeBigEndianUint32( digest + 16, H4 );
-*/
-        storeBigEndianUint32(signature,      H0);
-        storeBigEndianUint32(signature + 4,  H1);
-        storeBigEndianUint32(signature + 8,  H2);
-        storeBigEndianUint32(signature + 12, H3);
-        storeBigEndianUint32(signature + 16, H4);
+            // copy the digest bytes
+    /*        storeBigEndianUint32( digest, H0 );
+            storeBigEndianUint32( digest + 4, H1 );
+            storeBigEndianUint32( digest + 8, H2 );
+            storeBigEndianUint32( digest + 12, H3 );
+            storeBigEndianUint32( digest + 16, H4 );
+    */
+            storeBigEndianUint32(signature,      H0);
+            storeBigEndianUint32(signature + 4,  H1);
+            storeBigEndianUint32(signature + 8,  H2);
+            storeBigEndianUint32(signature + 12, H3);
+            storeBigEndianUint32(signature + 16, H4);
 
-        // return the digest
-        memcpy(signature_, signature, SHA1_SIZE);
+            // return the digest
+            if (signature_ != NULL) {
+                memcpy(signature_, signature, SHA1_SIZE);
+            }
+
+            sig_to_string(signature, str, 41);
+
+            finished = true;
+        }
+    }
+
+   /*
+     * get_sig
+     *
+     * DESCRIPTION:
+     *
+     * Retrieves the previously calculated signature from the SHA1 object.
+     *
+     * RETURNS:
+     *
+     * None.
+     *
+     * ARGUMENTS:
+     *
+     * signature_ - A 16 byte buffer that will contain the SHA1 signature.
+     */
+    void sha1_t::get_sig(void* signature_) {
+        if (finished) {
+            memcpy(signature_, signature, SHA1_SIZE);
+        }
+    }
+
+    /*
+     * get_string
+     *
+     * DESCRIPTION:
+     *
+     * Retrieves the previously calculated signature from the SHA1 object in
+     * printable format.
+     *
+     * RETURNS:
+     *
+     * None.
+     *
+     * ARGUMENTS:
+     *
+     * str_ - a string of characters which should be at least 41 bytes long
+     * (2 characters per SHA1 byte and 1 for the \0).
+     *
+     * str_len - the length of the string.
+     */
+    void sha1_t::get_string(void* str_, const unsigned int str_len) {
+        if (finished) {
+            memcpy(str_, str, str_len);
+        }
     }
 
     void sha1_t::initialise() {
@@ -244,5 +273,88 @@ namespace sha1 {
         finished = false;
     }
 
+    /****************************** Exported Functions ******************************/
+
+    /*
+     * sig_to_string
+     *
+     * DESCRIPTION:
+     *
+     * Convert a SHA1 signature in a 20 byte buffer into a hexadecimal string
+     * representation.
+     *
+     * RETURNS:
+     *
+     * None.
+     *
+     * ARGUMENTS:
+     *
+     * signature_ - a 20 byte buffer that contains the MD5 signature.
+     *
+     * str_ - a string of charactes which should be at least 41 bytes long (2
+     * characters per SHA1 byte and 1 for the \0).
+     *
+     * str_len - the length of the string.
+     */
+    void sig_to_string(const void* signature_, char* str_, const int str_len) {
+        unsigned char* sig_p;
+        char* str_p;
+        char* max_p;
+        unsigned int high, low;
+
+        str_p = str_;
+        max_p = str_ + str_len;
+
+        for (sig_p = (unsigned char*)signature_; sig_p < (unsigned char*)signature_ + SHA1_SIZE; sig_p++) {
+            high = *sig_p / 16;
+            low = *sig_p % 16;
+            /* account for 2 chars */
+            if (str_p + 1 >= max_p) {
+                break;
+            }
+            *str_p++ = sha1::HEX_STRING[high];
+            *str_p++ = sha1::HEX_STRING[low];
+        }
+        /* account for 2 chars */
+        if (str_p < max_p) {
+            *str_p++ = '\0';
+        }
+    }
+
+    /*
+     * sig_from_string
+     *
+     * DESCRIPTION:
+     *
+     * Convert a SHA1 signature from a hexadecimal string representation into
+     * a 20 byte buffer.
+     *
+     * RETURNS:
+     *
+     * None.
+     *
+     * ARGUMENTS:
+     *
+     * signature_ - A 20 byte buffer that will contain the SHA1 signature.
+     *
+     * str_ - A string of charactes which _must_ be at least 40 bytes long (2
+     * characters per SHA1 byte).
+     */
+    void sig_from_string(void* signature_, const char* str_) {
+        unsigned char *sig_p;
+        const char *str_p;
+        char* hex;
+        unsigned int high, low, val;
+
+        hex = (char*)sha1::HEX_STRING;
+        sig_p = static_cast<unsigned char*>(signature_);
+
+        for (str_p = str_; str_p < str_ + SHA1_SIZE * 2; str_p += 2) {
+            high = strchr(hex, *str_p) - hex;
+            low = strchr(hex, *(str_p + 1)) - hex;
+            val = high * 16 + low;
+            *sig_p++ = val;
+        }
+    }
 } // namespace sha1
 
