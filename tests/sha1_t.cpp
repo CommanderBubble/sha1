@@ -17,61 +17,10 @@ accompanying LICENSE file.
 
 #include "../src/sha1.h"
 
-int main(int argc, char *argv[])
-{
-	if( argc == 2 ) {
-        sha1::sha1_t sha1;
-        unsigned char* digest;
-        int i;
-        #define BUFFERSIZE 8192
-
-		assert( argv[1] );
-		/* open the file */
-		int fd = open( argv[1], O_RDONLY | O_BINARY, 0 );
-		/* handle open failure */
-		if( fd == -1 ) {
-			fprintf( stderr, "cannot open file %s\n", argv[1] );
-			return 1;
-			}
-
-		/* prepare to calculate the SHA-1 hash */
-		char* buffer = (char*)malloc( BUFFERSIZE );
-		assert( buffer );
-
-		/* loop through the file */
-		int ret;
-		while( true ) {
-			/* read a chunk of data */
-			ret = read( fd, buffer, BUFFERSIZE );
-			/* check for error and end of file */
-			if( ret < 1 ) break;
-			/* run this data through the hash function */
-			sha1.process(buffer, ret);
-			}
-
-		/* close the file */
-		close( fd );
-
-		/* there was an error reading the file */
-		if( ret == -1 ) {
-			fprintf( stderr, "error reading %s.\n", argv[1] );
-			return 1;
-			}
-
-		/* get the digest */
-		sha1.finish(digest);
-		assert( digest );
-		/* print it out */
-		printf( "%s:", argv[1] );
-		sha1::hex_printer( digest, 20 );
-		printf( "\n" );
-		fflush( stdout );
-		free( digest );
-		return 0;
-	}
+int run_tests() {
+    int ret = 0;
 
 	// these example text blocks are taken from RFC3174
-
     std::vector<std::pair<const char*, const char*> > tests;
     tests.push_back(std::pair<const char*, const char*>("abc","a9993e364706816aba3e25717850c26c9cd0d89d"));
     tests.push_back(std::pair<const char*, const char*>("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq","84983e441c3bd26ebaae4aa1f95129e5e54670f1"));
@@ -90,7 +39,6 @@ int main(int argc, char *argv[])
 
     unsigned char sig[SHA1_SIZE], sig2[SHA1_SIZE];
     char str[SHA1_STRING_SIZE];
-
 
     /* run our tests */
     for (unsigned int i = 0; i < tests.size(); i++) {
@@ -130,12 +78,76 @@ int main(int argc, char *argv[])
     std::cout << std::endl << "*******************************" << std::endl
               << "    " << passed << " of " << tests.size() << " tests passed" << std::endl;
     if (passed != tests.size()) {
+        ret = 1;
         std::cout << std::endl << "   Please notify developer" << std::endl;
         std::cout << "  " << passed_h << " passed hashing check" << std::endl
                   << "  " << passed_h << " passed comparison check" << std::endl;
     }
     std::cout << "*******************************" << std::endl;
 
-	return 0;
+	return ret;
+}
+
+int read_input(int argc, char** argv) {
+    sha1::sha1_t sha1;
+    unsigned char* digest;
+    const unsigned int buffer_size = 8192;
+
+    assert( argv[1] );
+
+    if (argv[1][0] == '-') {
+
+    }
+
+    /* open the file */
+    int fd = open( argv[1], O_RDONLY | O_BINARY, 0 );
+    /* handle open failure */
+    if( fd == -1 ) {
+        fprintf( stderr, "cannot open file %s\n", argv[1] );
+        return 1;
+        }
+
+    /* prepare to calculate the SHA-1 hash */
+    char* buffer = (char*)malloc( buffer_size );
+    assert( buffer );
+
+    /* loop through the file */
+    int ret;
+    while( true ) {
+        /* read a chunk of data */
+        ret = read( fd, buffer, buffer_size );
+        /* check for error and end of file */
+        if( ret < 1 ) break;
+        /* run this data through the hash function */
+        sha1.process(buffer, ret);
+        }
+
+    /* close the file */
+    close( fd );
+
+    /* there was an error reading the file */
+    if( ret == -1 ) {
+        fprintf( stderr, "error reading %s.\n", argv[1] );
+        return 1;
+        }
+
+    /* get the digest */
+    sha1.finish(digest);
+    assert( digest );
+    /* print it out */
+    printf( "%s:", argv[1] );
+    printf( "\n" );
+    fflush( stdout );
+    free( digest );
+    return 0;
+}
+
+int main(int argc, char* argv[])
+{
+	if( argc == 2 ) {
+        return read_input(argc, argv);
+	} else {
+        return run_tests();
+	}
 }
 
