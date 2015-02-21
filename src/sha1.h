@@ -1,26 +1,6 @@
-/* sha1.h
-
-Copyright (c) 2005 Michael D. Leonhard
-
-http://tamale.net/
-
-This file is licensed under the terms described in the
-accompanying LICENSE file.
-*/
-
 #ifndef SHA1_HEADER
 #define SHA1_HEADER
 
-#include <cstdio>
-
-/*
- *
- *
- * currently doens't account for platforms where unsigned int isn't a 4 byte type
- *
- * this should be 20.
- *
- */
 const unsigned int SHA1_SIZE = (5 * sizeof(unsigned int));  /* 20 */
 const unsigned int SHA1_STRING_SIZE = 2 * SHA1_SIZE + 1;    /* 41 */
 
@@ -71,15 +51,16 @@ namespace sha1 {
              *
              * ARGUMENTS:
              *
-             * buffer - A buffer of bytes whose SHA1 signature we are calculating.
+             * input - A buffer of bytes whose SHA1 signature we are calculating.
              *
-             * buf_len - The length of the buffer.
+             * input_length - The length of the buffer.
              *
              * signature_ - A 20 byte buffer that will contain the MD5 signature.
              */
-            sha1_t(const char* buffer, const unsigned int buf_len, void* signature_);
+            sha1_t(const char* input, const unsigned int input_length, void* signature_);
 
-            void process(const char*, int);
+            void process(const char* input, int input_length);
+
             void finish(void* signature_ = NULL);
 
             /*
@@ -124,7 +105,6 @@ namespace sha1 {
             // utility methods
             void initialise();
 
-            unsigned int lrot(unsigned int, int);
             void storeBigEndianUint32(unsigned char*, unsigned int);
             void process_block();
 
@@ -135,7 +115,7 @@ namespace sha1 {
             unsigned int H3;
             unsigned int H4;
 
-            unsigned char bytes[64];
+            unsigned char bytes[sha1::BLOCK_SIZE];
             int unprocessedBytes;
             size_t size;
 
@@ -144,8 +124,6 @@ namespace sha1 {
 
             bool finished;
     };
-
-    extern void hex_printer(unsigned char*, int);
 
     /*
      * sig_to_string
@@ -192,6 +170,5 @@ namespace sha1 {
     extern void sig_from_string(void* signature, const char* str);
 
 } // namescpace sha1
-
 
 #endif

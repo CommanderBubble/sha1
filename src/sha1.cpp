@@ -11,44 +11,21 @@ accompanying LICENSE file.
 #include <cstring>
 #include <cassert>
 
-#include "../conf.h"
+#include "conf.h"
 #include "sha1.h"
 #include "sha1_loc.h"
 
 namespace sha1 {
-    // print out memory in hexadecimal
-    void hex_printer( unsigned char* c, int l )
-    {
-        while( l > 0 ) {
-            printf( "%02x", *c );
-            l--;
-            c++;
-        }
-    }
-
-    // circular left bit rotation.  MSB wraps around to LSB
-    unsigned int sha1_t::lrot( unsigned int x, int bits ) {
-        return (x<<bits) | (x>>(32 - bits));
-    };
-
-    // Save a 32-bit unsigned integer to memory, in big-endian order
-    void sha1_t::storeBigEndianUint32( unsigned char* byte, unsigned int num ) {
-        byte[0] = (unsigned char)(num>>24);
-        byte[1] = (unsigned char)(num>>16);
-        byte[2] = (unsigned char)(num>>8);
-        byte[3] = (unsigned char)num;
-    }
-
     // Constructor *******************************************************
     sha1_t::sha1_t() {
         initialise();
     }
 
     // Constructor *******************************************************
-    sha1_t::sha1_t(const char* buffer, const unsigned int buf_len, void* signature_) {
+    sha1_t::sha1_t(const char* input, const unsigned int input_length, void* signature_) {
         initialise();
 
-        process(buffer, buf_len);
+        process(input, input_length);
 
         finish(signature);
     }
@@ -56,9 +33,6 @@ namespace sha1 {
     // process ***********************************************************
     void sha1_t::process_block() {
         if (unprocessedBytes == sha1::BLOCK_SIZE) {
-            //assert( unprocessedBytes == 64 );
-            //printf( "process: " ); hexPrinter( bytes, 64 ); printf( "\n" );
-
             int t;
             unsigned int a, b, c, d, e, K, f, W[80];
 
@@ -77,7 +51,7 @@ namespace sha1 {
                      +  bytes[t * 4 + 3];
 
             for (; t < 80; t++)
-                W[t] = lrot(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
+                W[t] = cyclic_left_rotate(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
 
             /* main loop */
             unsigned int temp;
@@ -96,10 +70,10 @@ namespace sha1 {
                     f = b ^ c ^ d;
                 }
 
-                temp = lrot(a, 5) + f + e + W[t] + K;
+                temp = cyclic_left_rotate(a, 5) + f + e + W[t] + K;
                 e = d;
                 d = c;
-                c = lrot(b, 30);
+                c = cyclic_left_rotate(b, 30);
                 b = a;
                 a = temp;
             }
@@ -117,31 +91,29 @@ namespace sha1 {
     }
 
     // addBytes **********************************************************
-    void sha1_t::process(const char* buffer, int buf_len) {
+    void sha1_t::process(const char* input, int input_length) {
         if (!finished) {
-            assert( buffer );
-
-            if (buf_len <= 0)
+            if (input_length <= 0)
                 return;
 
             // add these bytes to the running total
-            size += buf_len;
+            size += input_length;
 
             // repeat until all data is processed
-            while (buf_len > 0) {
+            while (input_length > 0) {
                 // number of bytes required to complete block
                 int needed = sha1::BLOCK_SIZE - unprocessedBytes;
                 assert(needed > 0);
 
                 // number of bytes to copy (use smaller of two)
-                int toCopy = (buf_len < needed) ? buf_len : needed;
+                int toCopy = (input_length < needed) ? input_length : needed;
 
                 // Copy the bytes
-                memcpy(bytes + unprocessedBytes, buffer, toCopy);
+                memcpy(bytes + unprocessedBytes, input, toCopy);
 
                 // Bytes have been copied
-                buf_len -= toCopy;
-                buffer += toCopy;
+                input_length -= toCopy;
+                input += toCopy;
                 unprocessedBytes += toCopy;
 
                 // there is a full block
@@ -177,34 +149,25 @@ namespace sha1 {
             int neededZeros = 56 - unprocessedBytes;
 
             // store file size (in bits) in big-endian format
-            storeBigEndianUint32( footer + neededZeros    , totalBitsH );
-            storeBigEndianUint32( footer + neededZeros + 4, totalBitsL );
+            sha1::make_big_endian_uint32( footer + neededZeros    , totalBitsH );
+            sha1::make_big_endian_uint32( footer + neededZeros + 4, totalBitsL );
 
             // finish the final block
             process((char*)footer, neededZeros + 8);
 
-            // allocate memory for the digest bytes
-    //        unsigned char* digest = (unsigned char*)malloc( 20 );
-
             // copy the digest bytes
-    /*        storeBigEndianUint32( digest, H0 );
-            storeBigEndianUint32( digest + 4, H1 );
-            storeBigEndianUint32( digest + 8, H2 );
-            storeBigEndianUint32( digest + 12, H3 );
-            storeBigEndianUint32( digest + 16, H4 );
-    */
-            storeBigEndianUint32(signature,      H0);
-            storeBigEndianUint32(signature + 4,  H1);
-            storeBigEndianUint32(signature + 8,  H2);
-            storeBigEndianUint32(signature + 12, H3);
-            storeBigEndianUint32(signature + 16, H4);
+            sha1::make_big_endian_uint32(signature,      H0);
+            sha1::make_big_endian_uint32(signature + 4,  H1);
+            sha1::make_big_endian_uint32(signature + 8,  H2);
+            sha1::make_big_endian_uint32(signature + 12, H3);
+            sha1::make_big_endian_uint32(signature + 16, H4);
 
             // return the digest
             if (signature_ != NULL) {
                 memcpy(signature_, signature, SHA1_SIZE);
             }
 
-            sig_to_string(signature, str, 41);
+            sig_to_string(signature, str, SHA1_STRING_SIZE);
 
             finished = true;
         }
@@ -257,10 +220,12 @@ namespace sha1 {
     }
 
     void sha1_t::initialise() {
-        // make sure that the data type is the right size
+        /*
+         * ensures that unsigned int is 4 bytes on this platform, will need modifying
+         * if we are to use on a different sized platform.
+         */
         assert(SHA1_SIZE == 20);
 
-        // initialize
         H0 = 0x67452301;
         H1 = 0xefcdab89;
         H2 = 0x98badcfe;

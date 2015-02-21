@@ -4,35 +4,25 @@
  * $Id: md5_loc.h,v 1.5 2010-05-07 13:58:18 gray Exp $
  */
 
-/*
- * Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
- * rights reserved.
- *
- * License to copy and use this software is granted provided that it is
- * identified as the "RSA Data Security, Inc. md5 Message-Digest
- * Algorithm" in all material mentioning or referencing this software
- * or this function.
- *
- * License is also granted to make and use derivative works provided that
- * such works are identified as "derived from the RSA Data Security,
- * Inc. md5 Message-Digest Algorithm" in all material mentioning or
- * referencing the derived work.
- *
- * RSA Data Security, Inc. makes no representations concerning either the
- * merchantability of this software or the suitability of this
- * software for any particular purpose. It is provided "as is" without
- * express or implied warranty of any kind.
- *
- * These notices must be retained in any copies of any part of this
- * documentation and/or software.
- */
-
-#ifndef __SHA15_LOC_H__
+#ifndef __SHA1_LOC_H__
 #define __SHA1_LOC_H__
 
 namespace sha1 {
-    const char* HEX_STRING = "0123456789abcdef";    /* to convert to hex */
-}
+    /*
+     * Function to perform the cyclic left rotation of blocks of data
+     */
+    inline unsigned int cyclic_left_rotate(unsigned int data, unsigned int shift_bits) {
+        return (data << shift_bits) | (data >> (32 - shift_bits));
+    }
+
+    // Save a 32-bit unsigned integer to memory, in big-endian order
+    inline void make_big_endian_uint32( unsigned char* byte, unsigned int num ) {
+        byte[0] = (unsigned char)(num >> 24);
+        byte[1] = (unsigned char)(num >> 16);
+        byte[2] = (unsigned char)(num >> 8);
+        byte[3] = (unsigned char)num;
+    }
+
     /*
      * Define my endian-ness.  Could not do in a portable manner using the
      * include files -- grumble.
@@ -53,4 +43,6 @@ namespace sha1 {
 
     #endif
 
+    const char* HEX_STRING = "0123456789abcdef";    /* to convert to hex */
+}
 #endif /* ! __SHA1_LOC_H__ */
