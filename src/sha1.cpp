@@ -94,12 +94,8 @@ namespace sha1 {
             stored_size += sizeof(unsigned int);
 
             process_block(stored);
-            if (stored_size > sha1::BLOCK_SIZE) {
+            if (stored_size > sha1::BLOCK_SIZE)
                 process_block(stored + sha1::BLOCK_SIZE);
-                std::cout << "Second process block: " << stored_size << std::endl;
-            } else {
-                std::cout << "no second process: " << stored_size << std::endl;
-            }
 
             // copy the digest bytes
             sha1::make_big_endian_uint32(signature,      H0);
