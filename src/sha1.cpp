@@ -30,66 +30,6 @@ namespace sha1 {
         finish(signature);
     }
 
-    // process ***********************************************************
-    void sha1_t::process_block() {
-        if (unprocessedBytes == sha1::BLOCK_SIZE) {
-            int t;
-            unsigned int a, b, c, d, e, K, f, W[80];
-
-            // starting values
-            a = H0;
-            b = H1;
-            c = H2;
-            d = H3;
-            e = H4;
-
-            // copy and expand the message block
-            for (t = 0; t < 16; t++)
-                W[t] = (bytes[t * 4]     << 24)
-                     + (bytes[t * 4 + 1] << 16)
-                     + (bytes[t * 4 + 2] << 8)
-                     +  bytes[t * 4 + 3];
-
-            for (; t < 80; t++)
-                W[t] = cyclic_left_rotate(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
-
-            /* main loop */
-            unsigned int temp;
-            for (t = 0; t < 80; t++) {
-                if (t < 20) {
-                    K = 0x5a827999;
-                    f = (b & c) | ((b ^ 0xFFFFFFFF) & d); //TODO: try using ~
-                } else if (t < 40) {
-                    K = 0x6ed9eba1;
-                    f = b ^ c ^ d;
-                } else if (t < 60) {
-                    K = 0x8f1bbcdc;
-                    f = (b & c) | (b & d) | (c & d);
-                } else {
-                    K = 0xca62c1d6;
-                    f = b ^ c ^ d;
-                }
-
-                temp = cyclic_left_rotate(a, 5) + f + e + W[t] + K;
-                e = d;
-                d = c;
-                c = cyclic_left_rotate(b, 30);
-                b = a;
-                a = temp;
-            }
-
-            /* add variables */
-            H0 += a;
-            H1 += b;
-            H2 += c;
-            H3 += d;
-            H4 += e;
-
-            /* all bytes have been processed */
-            unprocessedBytes = 0;
-        }
-    }
-
     // addBytes **********************************************************
     void sha1_t::process(const char* input, int input_length) {
         if (!finished) {
@@ -97,7 +37,9 @@ namespace sha1 {
                 return;
 
             // add these bytes to the running total
-            size += input_length;
+            if (message_length[0] + input_length < message_length[0])
+                message_length[1]++;
+            message_length[0] += input_length;
 
             // repeat until all data is processed
             while (input_length > 0) {
@@ -127,8 +69,9 @@ namespace sha1 {
     void sha1_t::finish(void* signature_) {
         if (!finished) {
             // save the message size
-            unsigned int totalBitsL = size << 3;
-            unsigned int totalBitsH = size >> 29;
+
+            unsigned int totalBitsL = ((message_length[0] & 0x1FFFFFFF) << 3);
+            unsigned int totalBitsH = (message_length[1] << 3) | ((message_length[0] & 0xE0000000) >> 29);
 
             // add 0x80 to the message
             process("\x80", 1);
@@ -233,9 +176,70 @@ namespace sha1 {
         H4 = 0xc3d2e1f0;
 
         unprocessedBytes = 0;
-        size = 0;
+        message_length[0] = 0;
+        message_length[1] = 0;
 
         finished = false;
+    }
+
+    // process ***********************************************************
+    void sha1_t::process_block() {
+        if (unprocessedBytes == sha1::BLOCK_SIZE) {
+            int t;
+            unsigned int a, b, c, d, e, K, f, W[80];
+
+            // starting values
+            a = H0;
+            b = H1;
+            c = H2;
+            d = H3;
+            e = H4;
+
+            // copy and expand the message block
+            for (t = 0; t < 16; t++)
+                W[t] = (bytes[t * 4]     << 24)
+                     + (bytes[t * 4 + 1] << 16)
+                     + (bytes[t * 4 + 2] << 8)
+                     +  bytes[t * 4 + 3];
+
+            for (; t < 80; t++)
+                W[t] = cyclic_left_rotate(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
+
+            /* main loop */
+            unsigned int temp;
+            for (t = 0; t < 80; t++) {
+                if (t < 20) {
+                    K = 0x5a827999;
+                    f = (b & c) | ((b ^ 0xFFFFFFFF) & d); //TODO: try using ~
+                } else if (t < 40) {
+                    K = 0x6ed9eba1;
+                    f = b ^ c ^ d;
+                } else if (t < 60) {
+                    K = 0x8f1bbcdc;
+                    f = (b & c) | (b & d) | (c & d);
+                } else {
+                    K = 0xca62c1d6;
+                    f = b ^ c ^ d;
+                }
+
+                temp = cyclic_left_rotate(a, 5) + f + e + W[t] + K;
+                e = d;
+                d = c;
+                c = cyclic_left_rotate(b, 30);
+                b = a;
+                a = temp;
+            }
+
+            /* add variables */
+            H0 += a;
+            H1 += b;
+            H2 += c;
+            H3 += d;
+            H4 += e;
+
+            /* all bytes have been processed */
+            unprocessedBytes = 0;
+        }
     }
 
     /****************************** Exported Functions ******************************/

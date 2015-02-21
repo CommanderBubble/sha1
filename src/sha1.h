@@ -117,7 +117,7 @@ namespace sha1 {
 
             unsigned char bytes[sha1::BLOCK_SIZE];
             int unprocessedBytes;
-            size_t size;
+            unsigned int message_length[2];
 
             unsigned char signature[SHA1_SIZE];           /* stored signature */
             char str[SHA1_STRING_SIZE];                       /* stored plain text hash */
