@@ -58,31 +58,6 @@ namespace sha1 {
             } else {
                 stored_size = 0;
             }
-
-/*********************************************************************************/
-/*
-            // repeat until all data is processed
-            while (input_length > 0) {
-                // number of bytes required to complete block
-                int needed = sha1::BLOCK_SIZE - stored_size;
-                assert(needed > 0);
-
-                // number of bytes to copy (use smaller of two)
-                int toCopy = (input_length < needed) ? input_length : needed;
-
-                // Copy the bytes
-                memcpy(stored + stored_size, input, toCopy);
-
-                // Bytes have been copied
-                input_length -= toCopy;
-                input += toCopy;
-                stored_size += toCopy;
-
-                // there is a full block
-                if (stored_size == sha1::BLOCK_SIZE) {
-                    process_block(stored);
-                }
-            }*/
         }
     }
 
