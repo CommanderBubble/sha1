@@ -1,15 +1,6 @@
-/* sha1.cpp
-
-Copyright (c) 2005 Michael D. Leonhard
-
-http://tamale.net/
-
-This file is licensed under the terms described in the
-accompanying LICENSE file.
-*/
-
 #include <cstring>
 #include <cassert>
+#include <iostream>
 
 #include "conf.h"
 #include "sha1.h"
@@ -44,23 +35,23 @@ namespace sha1 {
             // repeat until all data is processed
             while (input_length > 0) {
                 // number of bytes required to complete block
-                int needed = sha1::BLOCK_SIZE - unprocessedBytes;
+                int needed = sha1::BLOCK_SIZE - stored_size;
                 assert(needed > 0);
 
                 // number of bytes to copy (use smaller of two)
                 int toCopy = (input_length < needed) ? input_length : needed;
 
                 // Copy the bytes
-                memcpy(bytes + unprocessedBytes, input, toCopy);
+                memcpy(stored + stored_size, input, toCopy);
 
                 // Bytes have been copied
                 input_length -= toCopy;
                 input += toCopy;
-                unprocessedBytes += toCopy;
+                stored_size += toCopy;
 
                 // there is a full block
-                if (unprocessedBytes == sha1::BLOCK_SIZE)
-                    process_block();
+                if (stored_size == sha1::BLOCK_SIZE)
+                    process_block(stored);
             }
         }
     }
@@ -69,7 +60,6 @@ namespace sha1 {
     void sha1_t::finish(void* signature_) {
         if (!finished) {
             // save the message size
-
             unsigned int totalBitsL = ((message_length[0] & 0x1FFFFFFF) << 3);
             unsigned int totalBitsH = (message_length[1] << 3) | ((message_length[0] & 0xE0000000) >> 29);
 
@@ -83,13 +73,13 @@ namespace sha1 {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
             // block has no room for 8-byte filesize, so finish it
-            if( unprocessedBytes > 56 )
-                process((char*)footer, sha1::BLOCK_SIZE - unprocessedBytes);
+            if( stored_size > 56 )
+                process((char*)footer, sha1::BLOCK_SIZE - stored_size);
 
-            assert( unprocessedBytes <= 56 );
+            assert( stored_size <= 56 );
 
             // how many zeros do we need
-            int neededZeros = 56 - unprocessedBytes;
+            int neededZeros = 56 - stored_size;
 
             // store file size (in bits) in big-endian format
             sha1::make_big_endian_uint32( footer + neededZeros    , totalBitsH );
@@ -175,7 +165,7 @@ namespace sha1 {
         H3 = 0x10325476;
         H4 = 0xc3d2e1f0;
 
-        unprocessedBytes = 0;
+        stored_size = 0;
         message_length[0] = 0;
         message_length[1] = 0;
 
@@ -183,8 +173,8 @@ namespace sha1 {
     }
 
     // process ***********************************************************
-    void sha1_t::process_block() {
-        if (unprocessedBytes == sha1::BLOCK_SIZE) {
+    void sha1_t::process_block(const unsigned char* block) {
+        if (stored_size == sha1::BLOCK_SIZE) {
             int t;
             unsigned int a, b, c, d, e, K, f, W[80];
 
@@ -197,10 +187,10 @@ namespace sha1 {
 
             // copy and expand the message block
             for (t = 0; t < 16; t++)
-                W[t] = (bytes[t * 4]     << 24)
-                     + (bytes[t * 4 + 1] << 16)
-                     + (bytes[t * 4 + 2] << 8)
-                     +  bytes[t * 4 + 3];
+                W[t] = (block[t * 4]     << 24)
+                     + (block[t * 4 + 1] << 16)
+                     + (block[t * 4 + 2] << 8)
+                     +  block[t * 4 + 3];
 
             for (; t < 80; t++)
                 W[t] = cyclic_left_rotate(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
@@ -238,7 +228,7 @@ namespace sha1 {
             H4 += e;
 
             /* all bytes have been processed */
-            unprocessedBytes = 0;
+            stored_size = 0;
         }
     }
 

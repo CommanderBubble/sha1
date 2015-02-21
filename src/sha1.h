@@ -106,7 +106,7 @@ namespace sha1 {
             void initialise();
 
             void storeBigEndianUint32(unsigned char*, unsigned int);
-            void process_block();
+            void process_block(const unsigned char*);
 
             // fields
             unsigned int H0;
@@ -115,8 +115,8 @@ namespace sha1 {
             unsigned int H3;
             unsigned int H4;
 
-            unsigned char bytes[sha1::BLOCK_SIZE];
-            int unprocessedBytes;
+            unsigned char stored[sha1::BLOCK_SIZE];
+            unsigned int stored_size;
             unsigned int message_length[2];
 
             unsigned char signature[SHA1_SIZE];           /* stored signature */
