@@ -24,13 +24,42 @@ namespace sha1 {
     // addBytes **********************************************************
     void sha1_t::process(const char* input, int input_length) {
         if (!finished) {
-            if (input_length <= 0)
-                return;
+ /*           unsigned int processed = 0;
 
-            // add these bytes to the running total
-            if (message_length[0] + input_length < message_length[0])
-                message_length[1]++;
-            message_length[0] += input_length;
+            //
+            // If we have any data stored from a previous call to process then we use these
+            // bytes first, and the new data is large enough to create a complete block then
+            // we process these bytes first.
+            //
+            if (stored_size and input_length + stored_size >= md5::BLOCK_SIZE) {
+                unsigned char block[md5::BLOCK_SIZE];
+                memcpy(block, stored, stored_size);
+                memcpy(block + stored_size, input, md5::BLOCK_SIZE - stored_size);
+                processed = md5::BLOCK_SIZE - stored_size;
+                stored_size = 0;
+                process_block(block);
+            }
+
+            //
+            // While there is enough data to create a complete block, process it.
+            //
+            while (processed + md5::BLOCK_SIZE <= input_length) {
+                process_block((unsigned char*)input + processed);
+                processed += md5::BLOCK_SIZE;
+            }
+
+            //
+            // If there are any unprocessed bytes left over that do not create a complete block
+            // then we store these bytes for processing next time.
+            //
+            if (processed != input_length) {
+                memcpy(stored + stored_size, (char*)input + processed, input_length - processed);
+                stored_size += input_length - processed;
+            } else {
+                stored_size = 0;
+            }
+*/
+/*********************************************************************************/
 
             // repeat until all data is processed
             while (input_length > 0) {
@@ -50,8 +79,9 @@ namespace sha1 {
                 stored_size += toCopy;
 
                 // there is a full block
-                if (stored_size == sha1::BLOCK_SIZE)
+                if (stored_size == sha1::BLOCK_SIZE) {
                     process_block(stored);
+                }
             }
         }
     }
@@ -59,6 +89,11 @@ namespace sha1 {
     // digest ************************************************************
     void sha1_t::finish(void* signature_) {
         if (!finished) {
+            // add these bytes to the running total
+            if (message_length[0] + stored_size < message_length[0])
+                message_length[1]++;
+            message_length[0] += stored_size;
+
             // save the message size
             unsigned int totalBitsL = ((message_length[0] & 0x1FFFFFFF) << 3);
             unsigned int totalBitsH = (message_length[1] << 3) | ((message_length[0] & 0xE0000000) >> 29);
@@ -175,6 +210,12 @@ namespace sha1 {
     // process ***********************************************************
     void sha1_t::process_block(const unsigned char* block) {
         if (stored_size == sha1::BLOCK_SIZE) {
+
+            // add these bytes to the running total
+            if (message_length[0] + sha1::BLOCK_SIZE < message_length[0])
+                message_length[1]++;
+            message_length[0] += sha1::BLOCK_SIZE;
+
             int t;
             unsigned int a, b, c, d, e, K, f, W[80];
 
