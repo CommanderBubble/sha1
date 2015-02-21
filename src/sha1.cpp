@@ -73,30 +73,33 @@ namespace sha1 {
             unsigned int totalBitsL = ((message_length[0] & 0x1FFFFFFF) << 3);
             unsigned int totalBitsH = (message_length[1] << 3) | ((message_length[0] & 0xE0000000) >> 29);
 
-            // add 0x80 to the message
-            process("\x80", 1);
+            int pad = sha1::BLOCK_SIZE - (sizeof(unsigned int) * 2) - stored_size;
+            if (pad <= 0)
+                pad += sha1::BLOCK_SIZE;
 
-            unsigned char footer[sha1::BLOCK_SIZE] = {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            /*
+             * Modified from a fixed array to this assignment and memset to be
+             * more flexible with block-sizes -- Gray 10/97.
+             */
+            if (pad > 0) {
+                stored[stored_size] = 0x80;
+                if (pad > 1)
+                    memset(stored + stored_size + 1, 0, pad - 1);
+                stored_size += pad;
+            }
 
-            // block has no room for 8-byte filesize, so finish it
-            if( stored_size > 56 )
-                process((char*)footer, sha1::BLOCK_SIZE - stored_size);
+            sha1::make_big_endian_uint32(stored + stored_size, totalBitsH);
+            stored_size += sizeof(unsigned int);
+            sha1::make_big_endian_uint32(stored + stored_size, totalBitsL);
+            stored_size += sizeof(unsigned int);
 
-            assert( stored_size <= 56 );
-
-            // how many zeros do we need
-            int neededZeros = 56 - stored_size;
-
-            // store file size (in bits) in big-endian format
-            sha1::make_big_endian_uint32( footer + neededZeros    , totalBitsH );
-            sha1::make_big_endian_uint32( footer + neededZeros + 4, totalBitsL );
-
-            // finish the final block
-            process((char*)footer, neededZeros + 8);
+            process_block(stored);
+            if (stored_size > sha1::BLOCK_SIZE) {
+                process_block(stored + sha1::BLOCK_SIZE);
+                std::cout << "Second process block: " << stored_size << std::endl;
+            } else {
+                std::cout << "no second process: " << stored_size << std::endl;
+            }
 
             // copy the digest bytes
             sha1::make_big_endian_uint32(signature,      H0);
@@ -191,7 +194,14 @@ namespace sha1 {
 
         int t;
         unsigned int a, b, c, d, e, K, f, W[80];
-
+/*
+        std::cout << "BEFORE"
+                  << "\nH0: " << H0
+                  << "\nH1: " << H1
+                  << "\nH2: " << H2
+                  << "\nH3: " << H3
+                  << "\nH4: " << H4 << std::endl;
+*/
         // starting values
         a = H0;
         b = H1;
@@ -240,9 +250,13 @@ namespace sha1 {
         H2 += c;
         H3 += d;
         H4 += e;
-
-        /* all bytes have been processed */
-        stored_size = 0;
+/*
+        std::cout << "AFTER"
+                  << "\nH0: " << H0
+                  << "\nH1: " << H1
+                  << "\nH2: " << H2
+                  << "\nH3: " << H3
+                  << "\nH4: " << H4 << std::endl;*/
     }
 
     /****************************** Exported Functions ******************************/

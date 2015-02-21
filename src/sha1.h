@@ -115,7 +115,7 @@ namespace sha1 {
             unsigned int H3;
             unsigned int H4;
 
-            unsigned char stored[sha1::BLOCK_SIZE];
+            unsigned char stored[sha1::BLOCK_SIZE * 2];
             unsigned int stored_size;
             unsigned int message_length[2];
 
