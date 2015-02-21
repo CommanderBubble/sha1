@@ -17,11 +17,15 @@ int run_tests() {
     tests.push_back(std::pair<const char*, const char*>("a","34aa973cd4c4daa4f61eeb2bdbad27316534016f"));
     tests.push_back(std::pair<const char*, const char*>("0123456701234567012345670123456701234567012345670123456701234567","dea356a2cddd90c7a7ecedc5ebb563934f460452"));
 
+    tests.push_back(std::pair<const char*, const char*>("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "0ea59bfe8787939816796610c73deb1c625e03ed"));
+
     std::vector<unsigned int> multiplier;
     multiplier.push_back(1);
     multiplier.push_back(1);
     multiplier.push_back(1000000);
     multiplier.push_back(10);
+    multiplier.push_back(8388608);
+
 
     int passed = 0;
     int passed_h = 0;
@@ -62,6 +66,7 @@ int run_tests() {
             passed++;
         } else {
             std::cout << "TEST " << i + 1 << " FAILED" << std::endl;
+            std::cout << "Hash: " << str << std::endl;
         }
     }
 
