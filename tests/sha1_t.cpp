@@ -1,13 +1,3 @@
-/* testsha1.cpp
-
-Copyright (c) 2005 Michael D. Leonhard
-
-http://tamale.net/
-
-This file is licensed under the terms described in the
-accompanying LICENSE file.
-*/
-
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
