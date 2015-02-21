@@ -13,7 +13,7 @@ namespace sha1 {
     }
 
     // Constructor *******************************************************
-    sha1_t::sha1_t(const char* input, const unsigned int input_length, void* signature_) {
+    sha1_t::sha1_t(const void* input, const unsigned int input_length, void* signature_) {
         initialise();
 
         process(input, input_length);
@@ -22,20 +22,20 @@ namespace sha1 {
     }
 
     // addBytes **********************************************************
-    void sha1_t::process(const char* input, int input_length) {
+    void sha1_t::process(const void* input, int input_length) {
         if (!finished) {
- /*           unsigned int processed = 0;
+            unsigned int processed = 0;
 
             //
             // If we have any data stored from a previous call to process then we use these
             // bytes first, and the new data is large enough to create a complete block then
             // we process these bytes first.
             //
-            if (stored_size and input_length + stored_size >= md5::BLOCK_SIZE) {
-                unsigned char block[md5::BLOCK_SIZE];
+            if (stored_size and input_length + stored_size >= sha1::BLOCK_SIZE) {
+                unsigned char block[sha1::BLOCK_SIZE];
                 memcpy(block, stored, stored_size);
-                memcpy(block + stored_size, input, md5::BLOCK_SIZE - stored_size);
-                processed = md5::BLOCK_SIZE - stored_size;
+                memcpy(block + stored_size, input, sha1::BLOCK_SIZE - stored_size);
+                processed = sha1::BLOCK_SIZE - stored_size;
                 stored_size = 0;
                 process_block(block);
             }
@@ -43,24 +43,24 @@ namespace sha1 {
             //
             // While there is enough data to create a complete block, process it.
             //
-            while (processed + md5::BLOCK_SIZE <= input_length) {
+            while (processed + sha1::BLOCK_SIZE <= input_length) {
                 process_block((unsigned char*)input + processed);
-                processed += md5::BLOCK_SIZE;
+                processed += sha1::BLOCK_SIZE;
             }
 
             //
             // If there are any unprocessed bytes left over that do not create a complete block
             // then we store these bytes for processing next time.
             //
-            if (processed != input_length) {
+            if (processed < input_length) {
                 memcpy(stored + stored_size, (char*)input + processed, input_length - processed);
                 stored_size += input_length - processed;
             } else {
                 stored_size = 0;
             }
-*/
-/*********************************************************************************/
 
+/*********************************************************************************/
+/*
             // repeat until all data is processed
             while (input_length > 0) {
                 // number of bytes required to complete block
@@ -82,7 +82,7 @@ namespace sha1 {
                 if (stored_size == sha1::BLOCK_SIZE) {
                     process_block(stored);
                 }
-            }
+            }*/
         }
     }
 
@@ -209,68 +209,65 @@ namespace sha1 {
 
     // process ***********************************************************
     void sha1_t::process_block(const unsigned char* block) {
-        if (stored_size == sha1::BLOCK_SIZE) {
+        // add these bytes to the running total
+        if (message_length[0] + sha1::BLOCK_SIZE < message_length[0])
+            message_length[1]++;
+        message_length[0] += sha1::BLOCK_SIZE;
 
-            // add these bytes to the running total
-            if (message_length[0] + sha1::BLOCK_SIZE < message_length[0])
-                message_length[1]++;
-            message_length[0] += sha1::BLOCK_SIZE;
+        int t;
+        unsigned int a, b, c, d, e, K, f, W[80];
 
-            int t;
-            unsigned int a, b, c, d, e, K, f, W[80];
+        // starting values
+        a = H0;
+        b = H1;
+        c = H2;
+        d = H3;
+        e = H4;
 
-            // starting values
-            a = H0;
-            b = H1;
-            c = H2;
-            d = H3;
-            e = H4;
+        // copy and expand the message block
+        for (t = 0; t < 16; t++)
+            W[t] = (block[t * 4]     << 24)
+                 + (block[t * 4 + 1] << 16)
+                 + (block[t * 4 + 2] << 8)
+                 +  block[t * 4 + 3];
 
-            // copy and expand the message block
-            for (t = 0; t < 16; t++)
-                W[t] = (block[t * 4]     << 24)
-                     + (block[t * 4 + 1] << 16)
-                     + (block[t * 4 + 2] << 8)
-                     +  block[t * 4 + 3];
+        for (; t < 80; t++)
+            W[t] = cyclic_left_rotate(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
 
-            for (; t < 80; t++)
-                W[t] = cyclic_left_rotate(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
-
-            /* main loop */
-            unsigned int temp;
-            for (t = 0; t < 80; t++) {
-                if (t < 20) {
-                    K = 0x5a827999;
-                    f = (b & c) | ((b ^ 0xFFFFFFFF) & d); //TODO: try using ~
-                } else if (t < 40) {
-                    K = 0x6ed9eba1;
-                    f = b ^ c ^ d;
-                } else if (t < 60) {
-                    K = 0x8f1bbcdc;
-                    f = (b & c) | (b & d) | (c & d);
-                } else {
-                    K = 0xca62c1d6;
-                    f = b ^ c ^ d;
-                }
-
-                temp = cyclic_left_rotate(a, 5) + f + e + W[t] + K;
-                e = d;
-                d = c;
-                c = cyclic_left_rotate(b, 30);
-                b = a;
-                a = temp;
+        /* main loop */
+        unsigned int temp;
+        for (t = 0; t < 80; t++) {
+            if (t < 20) {
+                K = 0x5a827999;
+                f = (b & c) | ((b ^ 0xFFFFFFFF) & d); //TODO: try using ~
+            } else if (t < 40) {
+                K = 0x6ed9eba1;
+                f = b ^ c ^ d;
+            } else if (t < 60) {
+                K = 0x8f1bbcdc;
+                f = (b & c) | (b & d) | (c & d);
+            } else {
+                K = 0xca62c1d6;
+                f = b ^ c ^ d;
             }
 
-            /* add variables */
-            H0 += a;
-            H1 += b;
-            H2 += c;
-            H3 += d;
-            H4 += e;
-
-            /* all bytes have been processed */
-            stored_size = 0;
+            temp = cyclic_left_rotate(a, 5) + f + e + W[t] + K;
+            e = d;
+            d = c;
+            c = cyclic_left_rotate(b, 30);
+            b = a;
+            a = temp;
         }
+
+        /* add variables */
+        H0 += a;
+        H1 += b;
+        H2 += c;
+        H3 += d;
+        H4 += e;
+
+        /* all bytes have been processed */
+        stored_size = 0;
     }
 
     /****************************** Exported Functions ******************************/
@@ -289,7 +286,7 @@ namespace sha1 {
      *
      * ARGUMENTS:
      *
-     * signature_ - a 20 byte buffer that contains the MD5 signature.
+     * signature_ - a 20 byte buffer that contains the sha1 signature.
      *
      * str_ - a string of charactes which should be at least 41 bytes long (2
      * characters per SHA1 byte and 1 for the \0).

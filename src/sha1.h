@@ -57,9 +57,9 @@ namespace sha1 {
              *
              * signature_ - A 20 byte buffer that will contain the MD5 signature.
              */
-            sha1_t(const char* input, const unsigned int input_length, void* signature_);
+            sha1_t(const void* input, const unsigned int input_length, void* signature_);
 
-            void process(const char* input, int input_length);
+            void process(const void* input, int input_length);
 
             void finish(void* signature_ = NULL);
 
