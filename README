@@ -1,9 +1,7 @@
-This library is a slightly modified version of the one found at http://tamalenet/sha1 by Michael D. Leonhard.
+This library is based of the one found at http://tamalenet/sha1 by Michael D. Leonhard, however has undergone extensive changes. This notice shall serve as indication of the programs origins.
 
-The modifications are mostly the inclusion of a makefile for building a static library
+The modifications include a makefile for building a static library.
 This SHOULD be cross-compatible, but is untested on anything other than windows under GCC.
-
-Documentation is the same as is provided in the unmodified library; changed only where relevant.
 
 * Introduction
 
@@ -25,31 +23,39 @@ make CXXFLAGS=<your_flags_here>
 
 * Class Usage
 
-The class is called SHA1.  The API consists of three methods:
+The class is called SHA1.  The API consists of five methods:
 
-SHA1::SHA1() is the class constructor
+sha1::sha1_t() is the class constructor
 
-void SHA1::addBytes( const char* data, int num )
+void sha1_t::process(const void* input, const unsigned int input_length )
   Processes bytes into the hash.
-  - data is a pointer to the first byte to be added. The bytes are not modified.
-  - num is the number of bytes to process.
+  - input is a pointer to the first byte to be added. The bytes are not modified.
+  - input_length is the number of bytes to process. The value is not modified.
 
-unsigned char* SHA1::getDigest()
-  Completes the hashing process and returns the final hash.  The SHA1 instance should not be used after calling this method.
-  Returns a pointer to a 20-byte hash.  Release the memory with free().
+void sha1::finish(void* signature_ = NULL)
+  Completes the hashing process and (optionally) returns the final hash.  The SHA1 instance cannot be used to calculate a new hash after this call.
+  - signature_ is a pointer to a (minimum) 20-byte char array.
 
-And two functions for using the resulting hash
+void get_sig(void* signature_)
+  Returns the previously calculated signature. can only be uesd after calling finish().
+  - signature_ is a pointer to a (minimum) 20-byte char array.
+  
+void get_string(void* str_)
+  Returns the previously calculated signature in readable hex format.
+  - str_ is a pointer to a (minimum) 41-byte char array.
+  
+We also provide two auxillary functions for converting hashes to strings and strings to hashes, for exmaple if the object has expired.
 
-void SHA1_hexPrinter( unsigned char* c, int l )
-  Is a utility method that prints bytes to stdout in hexadecimal format.
-  - c is a pointer to the first byte to be printed. The bytes are not modified.
-  - l is the number of bytes to print.
-
-void SHA1_hexToString(unsigned char* c, char* o, int l)
+void sha1::sig_to_string(const void* signature_, char* str_)
   Is a utility method that turns a digest into a human-readable string
-  - c is a pointer to the first byte to be printed. The bytes are not modified.
-  - o is a pointer to the destination char* for the string to be placed into
-  - l is the number of bytes to print.
+  - signature_ is a pointer to the char array containing the signature. The bytes are not modified.
+  - str_ is a pointer to the char array for the string to be placed into. it must have room for at least 41 bytes; this is the caller's responsibility.
+
+void sha1::sig_from_string(void* signature_, const char* str_)
+  Is a utility method that turns a digest into a human-readable string
+  - signature_ is a pointer to the char array to place the signature in. it must behave room for at least 20 bytes; this is the caller's responsibility.
+  - str_ is a pointer to the char array containing the string. The bytes are not modified.
+
 
 * Example
 
@@ -57,14 +63,20 @@ The following program will print one line to stdout:
  a9 99 3e 36 47 06 81 6a ba 3e 25 71 78 50 c2 6c 9c d0 d8 9d
 
 #include <string.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
+
 #include "sha1.h"
-int main(int argc, char *argv[])
-{
-	#define BYTES "abc"
-	SHA1 sha1_hash;
-	sha1_hash.addBytes( BYTES, strlen( BYTES ) );
-	unsigned char* digest = sha1_hash.getDigest();
-	SHA1_hexPrinter( digest, 20 );
-	free( digest );
+
+int main(int argc, char *argv[]) {
+	const char* BYTES "abc"
+	
+	sha1::sha1_t sha1;
+	sha1.process(BYTES, strlen(BYTES));
+	
+	char* hash[SHA1_STRING_SIZE]; // defined in sha1.h
+	sha1.finish(hash);
+	
+	std::cout << hash;
+	
 }
