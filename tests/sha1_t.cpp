@@ -48,7 +48,7 @@ int run_tests() {
         sha1.finish(sig);
 
         /* convert from the sig to a string rep */
-        sha1::sig_to_string(sig, str, sizeof(str));
+        sha1::sig_to_string(sig, str);
         if (strcmp(str, tests[i].second) == 0) {
             passed_hash = true;
             passed_h++;
