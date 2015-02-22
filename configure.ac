@@ -9,7 +9,7 @@ AC_CONFIG_MACRO_DIR(config)
 AC_CONFIG_SRCDIR(./src)
 AC_CONFIG_HEADER(src/conf.h)
 
-AC_MSG_NOTICE([configurations for the sha1 library])
+AC_MSG_NOTICE([Configurations for the SHA1 library])
 
 ##############################################################################
 # arguments
@@ -46,6 +46,25 @@ AC_RUN_IFELSE(
 	[AC_MSG_RESULT([big])],
 	[AC_MSG_RESULT([unknown, assume little])]
 )
+
+##############################################################################
+#
+# check if we are enabling debig printing
+#
+
+AC_ARG_ENABLE([transform-debugging],
+	[AS_HELP_STRING([--enable-transform-debugging],
+					[Enable debugging output from internal transforms])]
+)
+
+AC_MSG_CHECKING([for transform debugging])
+if test "x$enable_transform_debugging" = "xyes"; then
+	AC_DEFINE(SHA1_DEBUG, 1, [Enable debugging output from internal transforms])
+	AC_MSG_RESULT([enabled])
+else
+	AC_DEFINE(SHA1_DEBUG, 0, [Disable debugging output from internal transforms])
+	AC_MSG_RESULT([disabled])
+fi
 
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT
