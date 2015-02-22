@@ -146,7 +146,7 @@ namespace sha1 {
      *
      * str_len - the length of the string.
      */
-    extern void sig_to_string(const void* signature, char* str, const int str_len);
+    extern void sig_to_string(const void* signature, char* str);
 
     /*
      * sig_from_string

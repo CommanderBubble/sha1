@@ -109,7 +109,7 @@ namespace sha1 {
                 memcpy(signature_, signature, SHA1_SIZE);
             }
 
-            sig_to_string(signature, str, SHA1_STRING_SIZE);
+            sig_to_string(signature, str);
 
             finished = true;
         }
@@ -278,14 +278,14 @@ namespace sha1 {
      *
      * str_len - the length of the string.
      */
-    void sig_to_string(const void* signature_, char* str_, const int str_len) {
+    void sig_to_string(const void* signature_, char* str_) {
         unsigned char* sig_p;
         char* str_p;
         char* max_p;
         unsigned int high, low;
 
         str_p = str_;
-        max_p = str_ + str_len;
+        max_p = str_ + SHA1_STRING_SIZE;
 
         for (sig_p = (unsigned char*)signature_; sig_p < (unsigned char*)signature_ + SHA1_SIZE; sig_p++) {
             high = *sig_p / 16;
