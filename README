@@ -60,24 +60,26 @@ void sha1::sig_from_string(void* signature_, const char* str_)
 * Example
 
 The following program will print one line to stdout:
- a9 99 3e 36 47 06 81 6a ba 3e 25 71 78 50 c2 6c 9c d0 d8 9d
+a9993e364706816aba3e25717850c26c9cd0d89d
 
 #include <string.h>
 #include <cstdlib>
 #include <iostream>
 
-#include "sha1.h"
+#include <sha1.h>
 
-int main(int argc, char *argv[]) {
-	const char* BYTES "abc"
-	
+int main(int argc, char** argv) {
+	const char* BYTES = "abc";
+
 	sha1::sha1_t sha1;
 	sha1.process(BYTES, strlen(BYTES));
-	
-	char* hash[SHA1_STRING_SIZE]; // defined in sha1.h
-	sha1.finish(hash);
-	
-	for (unsigned int i = 0; i << SHA1_STRING_SIZE; i++) {
-		std::cout << hash[1] << " ";
+	sha1.finish();
+
+    char str[SHA1_STRING_SIZE];
+
+    sha1.get_string(str, SHA1_STRING_SIZE);
+
+	for (unsigned int i = 0; i < SHA1_STRING_SIZE; i++) {
+		std::cout << str[i];
 	}
 }
