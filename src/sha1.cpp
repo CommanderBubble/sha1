@@ -7,12 +7,10 @@
 #include "sha1_loc.h"
 
 namespace sha1 {
-    // Constructor *******************************************************
     sha1_t::sha1_t() {
         initialise();
     }
 
-    // Constructor *******************************************************
     sha1_t::sha1_t(const void* input, const unsigned int input_length, void* signature_) {
         initialise();
 
@@ -21,16 +19,15 @@ namespace sha1 {
         finish(signature);
     }
 
-    // addBytes **********************************************************
     void sha1_t::process(const void* input, int input_length) {
         if (!finished) {
             unsigned int processed = 0;
 
-            //
-            // If we have any data stored from a previous call to process then we use these
-            // bytes first, and the new data is large enough to create a complete block then
-            // we process these bytes first.
-            //
+            /*
+             * If we have any data stored from a previous call to process then we use these
+             * bytes first, and the new data is large enough to create a complete block then
+             * we process these bytes first.
+             */
             if (stored_size and input_length + stored_size >= sha1::BLOCK_SIZE) {
                 unsigned char block[sha1::BLOCK_SIZE];
                 memcpy(block, stored, stored_size);
@@ -40,18 +37,18 @@ namespace sha1 {
                 process_block(block);
             }
 
-            //
-            // While there is enough data to create a complete block, process it.
-            //
+            /*
+             * While there is enough data to create a complete block, process it.
+             */
             while (processed + sha1::BLOCK_SIZE <= input_length) {
                 process_block((unsigned char*)input + processed);
                 processed += sha1::BLOCK_SIZE;
             }
 
-            //
-            // If there are any unprocessed bytes left over that do not create a complete block
-            // then we store these bytes for processing next time.
-            //
+            /*
+             * If there are any unprocessed bytes left over that do not create a complete block
+             * then we store these bytes for processing next time.
+             */
             if (processed < input_length) {
                 memcpy(stored + stored_size, (char*)input + processed, input_length - processed);
                 stored_size += input_length - processed;
@@ -61,17 +58,12 @@ namespace sha1 {
         }
     }
 
-    // digest ************************************************************
     void sha1_t::finish(void* signature_) {
         if (!finished) {
-            // add these bytes to the running total
+            /* add these bytes to the running total */
             if (message_length[0] + stored_size < message_length[0])
                 message_length[1]++;
             message_length[0] += stored_size;
-
-            // save the message size
-            unsigned int totalBitsL = ((message_length[0] & 0x1FFFFFFF) << 3);
-            unsigned int totalBitsH = (message_length[1] << 3) | ((message_length[0] & 0xE0000000) >> 29);
 
             int pad = sha1::BLOCK_SIZE - (sizeof(unsigned int) * 2) - stored_size;
             if (pad <= 0)
@@ -88,8 +80,11 @@ namespace sha1 {
                 stored_size += pad;
             }
 
+            unsigned int totalBitsH = (message_length[1] << 3) | ((message_length[0] & 0xE0000000) >> 29);
             sha1::make_big_endian_uint32(stored + stored_size, totalBitsH);
             stored_size += sizeof(unsigned int);
+
+            unsigned int totalBitsL = ((message_length[0] & 0x1FFFFFFF) << 3);
             sha1::make_big_endian_uint32(stored + stored_size, totalBitsL);
             stored_size += sizeof(unsigned int);
 
@@ -97,7 +92,7 @@ namespace sha1 {
             if (stored_size > sha1::BLOCK_SIZE)
                 process_block(stored + sha1::BLOCK_SIZE);
 
-            // copy the digest bytes
+            /* copy the digest bytes */
             sha1::make_big_endian_uint32(signature,      H0);
             sha1::make_big_endian_uint32(signature + 4,  H1);
             sha1::make_big_endian_uint32(signature + 8,  H2);
@@ -115,7 +110,7 @@ namespace sha1 {
         }
     }
 
-   /*
+    /*
      * get_sig
      *
      * DESCRIPTION:
@@ -174,9 +169,9 @@ namespace sha1 {
         H3 = 0x10325476;
         H4 = 0xc3d2e1f0;
 
-        stored_size = 0;
         message_length[0] = 0;
         message_length[1] = 0;
+        stored_size = 0;
 
         finished = false;
     }
@@ -190,14 +185,16 @@ namespace sha1 {
 
         int t;
         unsigned int a, b, c, d, e, K, f, W[80];
-/*
-        std::cout << "BEFORE"
-                  << "\nH0: " << H0
-                  << "\nH1: " << H1
-                  << "\nH2: " << H2
-                  << "\nH3: " << H3
-                  << "\nH4: " << H4 << std::endl;
-*/
+
+        #if SHA1_DEBUG
+            std::cout << "BEFORE"
+                      << "\nH0: " << H0
+                      << "\nH1: " << H1
+                      << "\nH2: " << H2
+                      << "\nH3: " << H3
+                      << "\nH4: " << H4 << std::endl;
+        #endif // SHA1_DEBUG
+
         // starting values
         a = H0;
         b = H1;
@@ -246,13 +243,15 @@ namespace sha1 {
         H2 += c;
         H3 += d;
         H4 += e;
-/*
-        std::cout << "AFTER"
-                  << "\nH0: " << H0
-                  << "\nH1: " << H1
-                  << "\nH2: " << H2
-                  << "\nH3: " << H3
-                  << "\nH4: " << H4 << std::endl;*/
+
+        #if SHA1_DEBUG
+            std::cout << "AFTER"
+                      << "\nH0: " << H0
+                      << "\nH1: " << H1
+                      << "\nH2: " << H2
+                      << "\nH3: " << H3
+                      << "\nH4: " << H4 << std::endl;
+        #endif // SHA1_DEBUG
     }
 
     /****************************** Exported Functions ******************************/
