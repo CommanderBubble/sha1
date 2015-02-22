@@ -150,9 +150,9 @@ namespace sha1 {
      *
      * str_len - the length of the string.
      */
-    void sha1_t::get_string(void* str_, const unsigned int str_len) {
+    void sha1_t::get_string(void* str_) {
         if (finished) {
-            memcpy(str_, str, str_len);
+            memcpy(str_, str, SHA1_STRING_SIZE);
         }
     }
 

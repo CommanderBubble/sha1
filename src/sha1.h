@@ -99,7 +99,7 @@ namespace sha1 {
              *
              * str_len - the length of the string.
              */
-            void get_string(void* str_, const unsigned int str_len);
+            void get_string(void* str_);
 
         private:
             // utility methods
