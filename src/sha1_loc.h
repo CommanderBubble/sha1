@@ -23,26 +23,6 @@ namespace sha1 {
         byte[3] = (unsigned char)num;
     }
 
-    /*
-     * Define my endian-ness.  Could not do in a portable manner using the
-     * include files -- grumble.
-     */
-    #if SHA1_BIG_ENDIAN
-
-    /*
-     * big endian - big is better
-     */
-    #define SHA1_SWAP(n) (((n) << 24) | (((n) & 0xff00) << 8) | (((n) >> 8) & 0xff00) | ((n) >> 24))
-
-    #else
-
-    /*
-     * little endian
-     */
-    #define SHA1_SWAP(n) (n)
-
-    #endif
-
     const char* HEX_STRING = "0123456789abcdef";    /* to convert to hex */
 }
 #endif /* ! __SHA1_LOC_H__ */
