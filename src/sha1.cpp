@@ -115,7 +115,9 @@ namespace sha1 {
      *
      * DESCRIPTION:
      *
-     * Retrieves the previously calculated signature from the SHA1 object.
+     * Retrieves the previously calculated signature from the SHA1 object. This
+     * function makes no attempts to ensure data will fit in the provided buffer;
+     * this is the caller's responsibility.
      *
      * RETURNS:
      *
@@ -123,7 +125,7 @@ namespace sha1 {
      *
      * ARGUMENTS:
      *
-     * signature_ - A 16 byte buffer that will contain the SHA1 signature.
+     * signature_ - A 20 byte buffer that will contain the SHA1 signature.
      */
     void sha1_t::get_sig(void* signature_) {
         if (finished) {
@@ -137,7 +139,8 @@ namespace sha1 {
      * DESCRIPTION:
      *
      * Retrieves the previously calculated signature from the SHA1 object in
-     * printable format.
+     * printable format. This function makes no attempts to ensure data will fit in
+     * the provided buffer; this is the caller's responsibility.
      *
      * RETURNS:
      *

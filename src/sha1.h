@@ -55,7 +55,9 @@ namespace sha1 {
              *
              * input_length - The length of the buffer.
              *
-             * signature_ - A 20 byte buffer that will contain the MD5 signature.
+             * signature_ - A 20 byte buffer that will contain the SHA1 signature. This
+             * function makes no attempts to ensure data will fit in the provided buffer;
+             * this is the caller's responsibility.
              */
             sha1_t(const void* input, const unsigned int input_length, void* signature_);
 
@@ -68,7 +70,9 @@ namespace sha1 {
              *
              * DESCRIPTION:
              *
-             * Retrieves the previously calculated signature from the MD5 object.
+             * Retrieves the previously calculated signature from the SHA1 object. This
+             * function makes no attempts to ensure data will fit in the provided buffer;
+             * this is the caller's responsibility.
              *
              * RETURNS:
              *
@@ -76,7 +80,7 @@ namespace sha1 {
              *
              * ARGUMENTS:
              *
-             * signature_ - A 16 byte buffer that will contain the MD5 signature.
+             * signature_ - A 20 byte buffer that will contain the SHA1 signature.
              */
             void get_sig(void* signature_);
 
@@ -86,7 +90,8 @@ namespace sha1 {
              * DESCRIPTION:
              *
              * Retrieves the previously calculated signature from the SHA1 object in
-             * printable format.
+             * printable format. This function makes no attempts to ensure data will fit in
+             * the provided buffer; this is the caller's responsibility.
              *
              * RETURNS:
              *
@@ -96,8 +101,6 @@ namespace sha1 {
              *
              * str_ - a string of characters which should be at least 41 bytes long
              * (2 characters per SHA1 byte and 1 for the \0).
-             *
-             * str_len - the length of the string.
              */
             void get_string(void* str_);
 
