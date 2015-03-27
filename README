@@ -12,8 +12,7 @@ The SHA-1 hash is currently used for security, however the intended purpose of t
 
 The provided makefile will produce a static lib to link against.
 To build it follow these steps:
-	1) autoreconf
-	2) configure
+	1) autoreconf2) configure
 	3) make
 	4) make install
 	
@@ -85,9 +84,9 @@ int main(int argc, char** argv) {
 	sha1.process(BYTES, strlen(BYTES));
 	sha1.finish();
 
-    char str[SHA1_STRING_SIZE];
+	char str[SHA1_STRING_SIZE];
 
-    sha1.get_string(str);
+	sha1.get_string(str);
 
 	for (unsigned int i = 0; i < SHA1_STRING_SIZE; i++)
 		std::cout << str[i];
