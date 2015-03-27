@@ -89,7 +89,6 @@ int main(int argc, char** argv) {
 
     sha1.get_string(str);
 
-	for (unsigned int i = 0; i < SHA1_STRING_SIZE; i++) {
+	for (unsigned int i = 0; i < SHA1_STRING_SIZE; i++)
 		std::cout << str[i];
-	}
 }
