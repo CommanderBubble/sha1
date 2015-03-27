@@ -1,4 +1,4 @@
-This library is based on the one found at http://tamalenet/sha1 by Michael D. Leonhard, however has undergone extensive changes. This notice shall serve as indication of the program's origins.
+This library is based on the one found at http://tamalenet/sha1 by Michael D. Leonhard, however has undergone extensive changes. This notice serves as indication of the program's origins.
 
 The modifications include a makefile for building a static library.
 This SHOULD be cross-compatible, but is untested on anything other than windows under msys2/mingw.
