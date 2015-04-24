@@ -20,11 +20,11 @@ namespace sha1 {
              *
              * DESCRIPTION:
              *
-             * Initialize structure containing state of MD5 computation. (RFC 1321,
-             * 3.3: Step 3).  This is for progressive MD5 calculations only.  If
-             * you have the complete string available, call it as below.
-             * process should be called for each bunch of bytes and after the last
-             * process call, finish should be called to get the signature.
+             * Initialize structure containing state of SHA1 computation. This is
+             * for progressive SHA1 calculations only.  If you have the complete
+             * string available, call it as below. Process should be called for
+             * each bunch of bytes and after the last process call, finish should
+             * be called to get the signature.
              *
              * RETURNS:
              *
@@ -133,7 +133,7 @@ namespace sha1 {
      *
      * DESCRIPTION:
      *
-     * Convert a MD5 signature in a 16 byte buffer into a hexadecimal string
+     * Convert a SHA1 signature in a 20 byte buffer into a hexadecimal string
      * representation.
      *
      * RETURNS:
@@ -142,10 +142,10 @@ namespace sha1 {
      *
      * ARGUMENTS:
      *
-     * signature - a 16 byte buffer that contains the MD5 signature.
+     * signature - a 20 byte buffer that contains the SHA1 signature.
      *
-     * str - a string of characters which should be at least 33 bytes long (2
-     * characters per MD5 byte and 1 for the \0).
+     * str - a string of characters which should be at least 41 bytes long (2
+     * characters per SHA1 byte and 1 for the \0).
      *
      * str_len - the length of the string.
      */
@@ -156,8 +156,8 @@ namespace sha1 {
      *
      * DESCRIPTION:
      *
-     * Convert a MD5 signature from a hexadecimal string representation into
-     * a 16 byte buffer.
+     * Convert a SHA1 signature from a hexadecimal string representation into
+     * a 20 byte buffer.
      *
      * RETURNS:
      *
@@ -165,10 +165,10 @@ namespace sha1 {
      *
      * ARGUMENTS:
      *
-     * signature - A 16 byte buffer that will contain the MD5 signature.
+     * signature - A 40 byte buffer that will contain the SHA1 signature.
      *
-     * str - A string of charactes which _must_ be at least 32 bytes long (2
-     * characters per MD5 byte).
+     * str - A string of charactes which _must_ be at least 40 bytes long (2
+     * characters per SHA1 byte).
      */
     extern void sig_from_string(void* signature, const char* str);
 
