@@ -12,7 +12,8 @@ The SHA-1 hash is currently used for security, however the intended purpose of t
 
 The provided makefile will produce a static lib to link against.
 To build it follow these steps:
-	1) autoreconf2) configure
+	1) autoreconf
+	2) configure
 	3) make
 	4) make install
 	
